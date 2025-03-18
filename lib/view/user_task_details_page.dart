@@ -4,9 +4,10 @@ class TaskDetailsPage extends StatelessWidget {
   final String category;
   final String title;
   final String dueDate;
+  final String description;
   final String priority;
 
-  TaskDetailsPage({required this.category, required this.title, required this.dueDate, required this.priority});
+  TaskDetailsPage({required this.category, required this.title, required this.dueDate, required this.priority, required this.description});
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +21,7 @@ class TaskDetailsPage extends StatelessWidget {
             Text("Task: $title"),
             Text("Due Date: $dueDate"),
             Text("Priority: $priority"),
+            Text("description: $description")
           ],
         ),
       ),

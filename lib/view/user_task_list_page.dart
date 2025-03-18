@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:task_project/view/user_task_details_page.dart';
+import 'package:task_project/view/user_edit_dialog.dart';
+
+
 class TaskListPage extends StatelessWidget {
   final String? status;
 
    final List<Map<String, String>> _tasks = [
-      {"category": "Work", "title": "Complete Report", "dueDate": "2025-03-16", "priority": "High", "status": "Pending"},
-      {"category": "Personal", "title": "Buy Groceries", "dueDate": "2025-03-17", "priority": "Medium", "status": "Completed"},
-      {"category": "Work", "title": "Finish Presentation", "dueDate": "2025-03-18", "priority": "Low", "status": "Pending"},
-      {"category": "Personal", "title": "Call Mom", "dueDate": "2025-03-19", "priority": "Medium", "status": "Completed"},
+      {"category": "Work", "title": "Complete Report", "dueDate": "2025-03-16", "priority": "High", "status": "Pending","description":"asdasdasd"},
+      {"category": "Personal", "title": "Buy Groceries", "dueDate": "2025-03-17", "priority": "Medium", "status": "Completed","description":"asdasdasd"},
+      {"category": "Work", "title": "Finish Presentation", "dueDate": "2025-03-18", "priority": "Low", "status": "Pending","description":"asdasdasd"},
+      {"category": "Personal", "title": "Call Mom", "dueDate": "2025-03-19", "priority": "Medium", "status": "Completed","description":"asdasdasd"},
     ];
   
   List<Map<String, String>> get tasks => List.unmodifiable(_tasks);
@@ -39,6 +42,7 @@ class TaskListPage extends StatelessWidget {
                     category: task["category"]!,
                     dueDate: task["dueDate"]!,
                     priority: task["priority"]!,
+                    description: task["description"]!
                   ),
                 ),
               );
@@ -48,6 +52,8 @@ class TaskListPage extends StatelessWidget {
               title: task["title"]!,
               dueDate: task["dueDate"]!,
               priority: task["priority"]!,
+              description: task["description"]!,
+              status: task["status"]!,
             ),
           );
         },
@@ -58,13 +64,41 @@ class TaskListPage extends StatelessWidget {
 
 
 
-class TaskItem extends StatelessWidget {
+class TaskItem extends StatefulWidget {
   final String category;
   final String title;
   final String dueDate;
   final String priority;
+  final String description;
+  final String status;
 
-  TaskItem({required this.category, required this.title, required this.dueDate, required this.priority});
+  TaskItem({
+    required this.category,
+    required this.title,
+    required this.dueDate,
+    required this.priority,
+    required this.description,
+    required this.status,
+  });
+
+  @override
+  _TaskItemState createState() => _TaskItemState();
+}
+
+class _TaskItemState extends State<TaskItem> {
+  late String currentStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    currentStatus = widget.status;
+  }
+
+  void toggleStatus() {
+    setState(() {
+      currentStatus = (currentStatus == "Completed") ? "Pending" : "Completed";
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,59 +109,67 @@ class TaskItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Align items to the start (left side)
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space out Column and ElevatedButton
-              children: [
-                // Column for category and title, aligned to the left
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // Align texts to the start (left side)
-                  children: [
-                    Text(category, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                
-                // Row for the done button, aligned to the right
-                ElevatedButton(
-                  onPressed: () {
-                   
-                  },
-                  child: Text('Done'),
-                ),
-              ],
-            )
-          ],
-        ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Due: $dueDate", style: TextStyle(color: Colors.grey[600])),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.category, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(widget.title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                ElevatedButton(
+                  onPressed: toggleStatus,
+                  child: Text(currentStatus == "Completed" ? "Undone" : "Done"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: currentStatus == "Completed" ? Colors.red : Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Due: ${widget.dueDate}", style: TextStyle(color: Colors.grey[600])),
                 Row(
                   children: [
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getPriorityColor(priority),
+                        color: _getPriorityColor(widget.priority),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        priority,
+                        widget.priority,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.edit, color: const Color.fromARGB(255, 37, 0, 250)),
+                      icon: Icon(Icons.edit, color: Colors.blue),
                       onPressed: () {
-                        // Define your action here, like opening an edit dialog
+                        // Show Dialog
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Edit Task'),
+                              content: EditTaskDialog(
+                                category: widget.category,
+                                title: widget.title,
+                                dueDate: widget.dueDate,
+                                priority: widget.priority,
+                                description: widget.description,
+                              ),
+                            );
+                          },
+                        );
                       },
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete, color: const Color.fromARGB(255, 248, 1, 14)),
+                      icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
-                        // Define your action here, like opening an edit dialog
+                        // Delete action
                       },
                     ),
                   ],
@@ -152,4 +194,7 @@ class TaskItem extends StatelessWidget {
         return Colors.grey;
     }
   }
+
+  
 }
+
