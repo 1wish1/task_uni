@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_project/bloc/task_bloc.dart';
+import 'package:task_project/bloc/task_event.dart';
+import 'package:task_project/bloc/task_state.dart';
 import 'package:task_project/view/user_task_details_page.dart';
 import 'package:task_project/view/user_edit_dialog.dart';
 
@@ -6,65 +10,81 @@ import 'package:task_project/view/user_edit_dialog.dart';
 class TaskListPage extends StatelessWidget {
   final String? status;
 
-   final List<Map<String, String>> _tasks = [
-      {"category": "Work", "title": "Complete Report", "dueDate": "2025-03-16", "priority": "High", "status": "Pending","description":"asdasdasd"},
-      {"category": "Personal", "title": "Buy Groceries", "dueDate": "2025-03-17", "priority": "Medium", "status": "Completed","description":"asdasdasd"},
-      {"category": "Work", "title": "Finish Presentation", "dueDate": "2025-03-18", "priority": "Low", "status": "Pending","description":"asdasdasd"},
-      {"category": "Personal", "title": "Call Mom", "dueDate": "2025-03-19", "priority": "Medium", "status": "Completed","description":"asdasdasd"},
-    ];
   
-  List<Map<String, String>> get tasks => List.unmodifiable(_tasks);
-
+  
   TaskListPage({this.status});
 
-  int get count => _tasks.where((task) => task["status"] == status).length;
 
 
   @override
   Widget build(BuildContext context) {
     
 
-    final filteredTasks = _tasks.where((task) => task["status"] == status).toList();
-
     return Scaffold(
-      appBar: AppBar(title: Text("$status Tasks")),
-      body: ListView.builder(
-        itemCount: filteredTasks.length,
-        itemBuilder: (context, index) {
-          final task = filteredTasks[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TaskDetailsPage(
-                    title: task["title"]!,
-                    category: task["category"]!,
-                    dueDate: task["dueDate"]!,
-                    priority: task["priority"]!,
-                    description: task["description"]!
+  appBar: AppBar(title: Text("$status Tasks")),
+  body: BlocBuilder<UserBloc, TaskState>(
+    builder: (context, state) {
+      if (state is TaskLoading) {
+        return Center(child: CircularProgressIndicator());
+      }
+      if (state is TaskError) {
+        return Center(child: Text(state.message));
+      }
+      if (state is TaskLoaded) {
+        final filteredTasks = state.tasks
+            .where((task) => task.status == status) // Filter based on status
+            .toList();
+
+        if (filteredTasks.isEmpty) {
+          return Center(child: Text("No tasks available"));
+        }
+
+        return ListView.builder(
+          itemCount: filteredTasks.length,
+          itemBuilder: (context, index) {
+            final task = filteredTasks[index];
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TaskDetailsPage(
+                      title: task.title,
+                      category: task.category,
+                      dueDate: task.dueDate,
+                      priority: task.priority,
+                      description: task.description,
+                      status: task.status,
+                    ),
                   ),
-                ),
-              );
-            },
-            child: TaskItem(
-              category: task["category"]!,
-              title: task["title"]!,
-              dueDate: task["dueDate"]!,
-              priority: task["priority"]!,
-              description: task["description"]!,
-              status: task["status"]!,
-            ),
-          );
-        },
-      ),
-    );
+                );
+              },
+              child: TaskItem(
+                id: task.id,
+                category: task.category,
+                title: task.title,
+                dueDate: task.dueDate,
+                priority: task.priority,
+                description: task.description,
+                status: task.status,
+              ),
+            );
+          },
+        );
+      }
+      return Container(); // Default return if no state matches
+    },
+  ),
+);
+
   }
 }
 
 
 
 class TaskItem extends StatefulWidget {
+  final int id;
   final String category;
   final String title;
   final String dueDate;
@@ -73,6 +93,7 @@ class TaskItem extends StatefulWidget {
   final String status;
 
   TaskItem({
+    required this.id,
     required this.category,
     required this.title,
     required this.dueDate,
@@ -120,7 +141,14 @@ class _TaskItemState extends State<TaskItem> {
                   ],
                 ),
                 ElevatedButton(
-                  onPressed: toggleStatus,
+                  onPressed: () {
+                    String newStatus = (currentStatus == "Completed") ? "Pending" : "Completed";  
+                    print(newStatus);
+                    context.read<UserBloc>().add(UpdateStatusTask(widget.id, newStatus));
+                    setState(() {
+                      currentStatus = newStatus;  // Update UI immediately
+                    });
+                  },
                   child: Text(currentStatus == "Completed" ? "Undone" : "Done"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: currentStatus == "Completed" ? Colors.red : Colors.green,
@@ -159,7 +187,7 @@ class _TaskItemState extends State<TaskItem> {
                                 title: widget.title,
                                 dueDate: widget.dueDate,
                                 priority: widget.priority,
-                                description: widget.description,
+                                description: widget.description, id: widget.id, status: widget.status,
                               ),
                             );
                           },
@@ -169,7 +197,7 @@ class _TaskItemState extends State<TaskItem> {
                     IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
-                        // Delete action
+                        context.read<UserBloc>().add(DeleteTask(widget.id));
                       },
                     ),
                   ],

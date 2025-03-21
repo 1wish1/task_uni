@@ -1,30 +1,45 @@
 class Task {
   final int id;
-  final String name;
-  final String email;
+  final String category;
+  final String title;
+  final String priority;
+  final String dueDate;  // Make sure this matches 'duedate' from the serializer
+  final String description;
+  final String status;
+  
+  Task({
+    required this.dueDate,
+    required this.category,
+    required this.title,
+    required this.priority,
+    required this.description,
+    required this.status,
+    required this.id,
+  });
 
-
-  Task({required this.id, required this.name, required this.email});
-
-
-  // Convert JSON to User object
+  // Convert JSON to Task object
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       id: json['id'],
-      name: json['name'],
-      email: json['email'],
+      category: json['category'],
+      dueDate: json['duedate'],  // Ensure this matches 'duedate' from the serializer
+      title: json['title'],
+      priority: json['priority'],
+      description: json['description'],
+      status: json['status'],
     );
   }
 
-
-  // Convert User object to JSON
+  // Convert Task object to JSON
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'name': name,
-      'email': email,
+      "id": id,
+      "duedate": dueDate,  // Ensure this matches 'duedate' from the serializer
+      "category": category,
+      "title": title,
+      "priority": priority,
+      "description": description,
+      "status": status,
     };
   }
 }
-
-

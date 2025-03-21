@@ -1,18 +1,25 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_project/bloc/task_bloc.dart';
+import 'package:task_project/bloc/task_event.dart';
 
 class EditTaskDialog extends StatefulWidget {
+  final int id;
   final String category;
   final String title;
   final String dueDate;
   final String priority;
   final String description;
+  final String status;
 
   EditTaskDialog({
+    
     required this.category,
     required this.title,
     required this.dueDate,
     required this.priority,
-    required this.description,
+    required this.description, required this.id, required this.status,
   });
 
   @override
@@ -20,6 +27,7 @@ class EditTaskDialog extends StatefulWidget {
 }
 
 class _EditTaskDialogState extends State<EditTaskDialog> {
+   late TextEditingController categoryController;
   late TextEditingController titleController;
   late TextEditingController dueDateController;
   late TextEditingController descriptionController;
@@ -28,6 +36,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
   @override
   void initState() {
     super.initState();
+    categoryController = TextEditingController(text: widget.category);
     titleController = TextEditingController(text: widget.title);
     dueDateController = TextEditingController(text: widget.dueDate);
     descriptionController = TextEditingController(text: widget.description);
@@ -36,6 +45,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
 
   @override
   void dispose() {
+    categoryController.dispose();
     titleController.dispose();
     dueDateController.dispose();
     descriptionController.dispose();
@@ -47,6 +57,10 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        TextField(
+          controller: categoryController,
+          decoration: InputDecoration(labelText: 'Category'),
+        ),
         TextField(
           controller: titleController,
           decoration: InputDecoration(labelText: 'Title'),
@@ -80,9 +94,8 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           children: [
             ElevatedButton(
               onPressed: () {
-                // Here you can update the task in your list.
-                // You can call a method to save the updated data
-                Navigator.of(context).pop(); // Close the dialog
+                context.read<UserBloc>().add(UpdateTask(widget.id, categoryController.text,titleController.text,descriptionController.text,selectedPriority,dueDateController.text));
+                Navigator.pop(context);
               },
               child: Text('Save'),
             ),
